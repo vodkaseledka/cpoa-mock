@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CPOA Practice Exam – 60‑Question Randomised Assessment</title>
+  <style>
+    body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;margin:0;padding:2rem;background:#f9fafb;color:#111827;line-height:1.5}
+    h1{font-size:2rem;margin-bottom:1rem}
+    .question{margin-bottom:1.5rem;padding:1rem;border:1px solid #e5e7eb;border-radius:0.5rem;background:#fff}
+    .question.correct{border-color:#16a34a;background:#dcfce7}
+    .question.incorrect{border-color:#dc2626;background:#fee2e2}
+    label{display:block;margin:.25rem 0;cursor:pointer}
+    button{padding:.5rem 1.25rem;font-size:1rem;border:none;border-radius:.5rem;background:#2563eb;color:#fff;cursor:pointer}
+    button:hover{background:#1d4ed8}
+    #result{margin-top:2rem;font-weight:600}
+    .domain-tag{display:inline-block;background:#e0e7ff;color:#3730a3;font-size:.75rem;font-weight:600;padding:.1rem .4rem;border-radius:.25rem;margin-left:.25rem}
+    summary{cursor:pointer;font-weight:600;margin-top:1rem}
+  </style>
+  <!-- Load Question Bank -->
+  <script src="questions.js"></script>
+</head>
+<body>
+  <h1>CPOA Mock Exam</h1>
+  <p>This assessment randomly selects <strong>60 questions</strong> (out of 150) every run, strictly adhering to the distribution requested:</p>
+  <ul>
+    <li>KA1 – Apply Foundational Concepts: 10% (6 questions)</li>
+    <li>KA2 – Cultivate Customer Intimacy: 15% (9 questions)</li>
+    <li>KA3 – Engage the Whole Team: 15% (9 questions)</li>
+    <li>KA4 – Make an Impact: 15% (9 questions)</li>
+    <li>KA5 – Deliver Often: 15% (9 questions)</li>
+    <li>KA6 – Learn Fast: 15% (9 questions)</li>
+    <li>KA7 – Obsess About Value: 15% (9 questions)</li>
+  </ul>
+  <details>
+    <summary>How scoring works</summary>
+    <p>• <strong>Single‑select</strong>: choose one answer.<br>• <strong>Multi‑select</strong>: choose <em>all</em> correct answers (any extra or missing answer marks the whole question wrong).<br>• Hit <em>Finish exam</em> to see results — correct answers show in green, incorrect in red.</p>
+  </details>
+
+  <div id="exam"></div>
+  <button id="finishBtn">Finish exam</button>
+  <div id="result"></div>
+
+<script>
+/***** Utility *****/
+const TOTAL_QUESTIONS = 60;
+const PERCENTAGES = {
+  "Apply Foundational Concepts": 0.10,
+  "Cultivate Customer Intimacy": 0.15,
+  "Engage the Whole Team": 0.15,
+  "Make an Impact": 0.15,
+  "Deliver Often": 0.15,
+  "Learn Fast": 0.15,
+  "Obsess About Value": 0.15
+};
+
+function shuffle(arr){ for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; } }
+
+/***** Compute domain quotas (always sums to 60) *****/
+function computeQuotas(){
+  const q={};
+  for(const [domain,pct] of Object.entries(PERCENTAGES)){ q[domain] = Math.round(TOTAL_QUESTIONS*pct); }
+  let diff = TOTAL_QUESTIONS - Object.values(q).reduce((a,b)=>a+b,0);
+  const domains = Object.keys(q);
+  let i=0;
+  while(diff!==0){ q[domains[i%domains.length]] += diff>0?1:-1; diff += diff>0?-1:1; i++; }
+  return q;
+}
+const QUOTAS = computeQuotas();
+
+/***** Build and Render Exam (executes after question bank script loads) *****/
+function buildExamSet(){
+  const buckets={}; Object.keys(PERCENTAGES).forEach(d=>buckets[d]=[]);
+  QUESTION_BANK.forEach(q=>{ if(buckets[q.domain]) buckets[q.domain].push(q); });
+  Object.values(buckets).forEach(shuffle);
+  const selected=[];
+  for(const [domain,count] of Object.entries(QUOTAS)){
+    if(buckets[domain].length < count){ console.warn(`Not enough questions for ${domain}`); }
+    selected.push(...buckets[domain].slice(0,count));
+  }
+  shuffle(selected);
+  return selected;
+}
+
+function renderExam(){
+  const examDiv = document.getElementById('exam'); examDiv.innerHTML='';
+  const examSet = buildExamSet();
+  examSet.forEach((q,i)=>renderQuestion(examDiv,q,i));
+}
+
+function renderQuestion(parent,q,idx){
+  const container=document.createElement('div'); container.className='question';
+  const title=document.createElement('p');
+  title.innerHTML=`<strong>${idx+1}. </strong>${q.text}`;
+  container.appendChild(title);
+  const order=[...q.options.keys()]; shuffle(order);
+  order.forEach(optIdx=>{
+    const label=document.createElement('label');
+    const input=document.createElement('input');
+    input.type=q.multi?'checkbox':'radio';
+    input.name=`q${idx}`;
+    input.dataset.correct=q.correct.includes(optIdx);
+    label.appendChild(input);
+    label.appendChild(document.createTextNode(' '+q.options[optIdx]));
+    container.appendChild(label);
+  });
+  parent.appendChild(container);
+}
+
+/***** Scoring *****/
+let finished=false;
+function gradeExam(){
+  if(finished) return; finished=true;
+  const questions=[...document.querySelectorAll('.question')];
+  let score=0;
+  questions.forEach(qEl=>{
+    const inputs=[...qEl.querySelectorAll('input')];
+    let ok=true;
+    inputs.forEach(inp=>{ const shouldBe = inp.dataset.correct === 'true'; if(shouldBe !== inp.checked){ ok=false; } });
+    qEl.classList.add(ok ? 'correct' : 'incorrect');
+    if(ok) score++;
+  });
+  const pct=Math.round((score/questions.length)*100);
+  document.getElementById('result').innerHTML = `<h2>Your score: ${score}/${questions.length} (${pct}%)</h2>`;
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/***** Init after DOM ready *****/
+window.addEventListener('DOMContentLoaded', () => {
+  if(typeof QUESTION_BANK === 'undefined'){
+    console.error('Question bank not loaded');
+    document.getElementById('exam').textContent = 'Failed to load questions.';
+    return;
+  }
+  renderExam();
+  document.getElementById('finishBtn').addEventListener('click', gradeExam);
+});
+</script>
+</body>
+</html>
