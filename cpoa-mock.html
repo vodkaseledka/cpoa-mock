@@ -1,140 +1,298 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CPOA Practice Exam – 60‑Question Randomised Assessment</title>
-  <style>
-    body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;margin:0;padding:2rem;background:#f9fafb;color:#111827;line-height:1.5}
-    h1{font-size:2rem;margin-bottom:1rem}
-    .question{margin-bottom:1.5rem;padding:1rem;border:1px solid #e5e7eb;border-radius:0.5rem;background:#fff}
-    .question.correct{border-color:#16a34a;background:#dcfce7}
-    .question.incorrect{border-color:#dc2626;background:#fee2e2}
-    label{display:block;margin:.25rem 0;cursor:pointer}
-    button{padding:.5rem 1.25rem;font-size:1rem;border:none;border-radius:.5rem;background:#2563eb;color:#fff;cursor:pointer}
-    button:hover{background:#1d4ed8}
-    #result{margin-top:2rem;font-weight:600}
-    .domain-tag{display:inline-block;background:#e0e7ff;color:#3730a3;font-size:.75rem;font-weight:600;padding:.1rem .4rem;border-radius:.25rem;margin-left:.25rem}
-    summary{cursor:pointer;font-weight:600;margin-top:1rem}
-  </style>
-  <!-- Load Question Bank -->
-  <script src="questions.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CPOA Practice Exam</title>
+<style>
+:root{
+  --gap:1rem;
+  --radius:.5rem;
+  --brand:#2563eb;
+  --answered:#1d4ed8;
+  --answered-bg:#eff6ff;
+  --correct:#16a34a;
+  --wrong:#dc2626;
+  --shadow:0 1px 3px rgba(0,0,0,.08);
+}
+
+/* ---------- base ---------- */
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+  font-family:"Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+}
+body{
+  background:#f9fafb;
+  min-height:100vh;
+  padding:1rem;
+  display:flex;
+  justify-content:center;
+}
+.wrapper{max-width:900px;width:100%;}
+h1{
+  text-align:center;
+  margin-bottom:var(--gap);
+  font-size:2rem;
+  font-weight:700;
+}
+
+/* ---------- top controls ---------- */
+.controls{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:.5rem;
+  margin-bottom:calc(var(--gap)*1.5);
+}
+.controls label{font-weight:500;}
+select,button{
+  padding:.4rem .6rem;
+  font-size:.9rem;
+  border:1px solid #d1d5db;
+  border-radius:var(--radius);
+  background:#fff;
+  cursor:pointer;
+}
+button#refreshBtn{
+  background:var(--brand);
+  color:#fff;
+  border:none;
+}
+button:hover{opacity:.9;}
+
+/* ---------- results box ---------- */
+#results{
+  margin-bottom:var(--gap);
+  padding:var(--gap);
+  border:1px solid #d1d5db;
+  border-radius:var(--radius);
+  background:#f0fdf4;
+  display:none;
+}
+#results h2{margin-bottom:.5rem;font-size:1.1rem;}
+#results ul{margin-left:1rem;list-style:disc;}
+
+/* ---------- questions ---------- */
+.question{
+  background:#fff;
+  border:1px solid #e5e7eb;
+  border-radius:var(--radius);
+  padding:var(--gap);
+  box-shadow:var(--shadow);
+  margin-bottom:var(--gap);
+  overflow-wrap:anywhere;
+}
+.question.answered{border-color:var(--answered);background:var(--answered-bg);}
+.question.correct{border-color:var(--correct);background:#f0fdf4;}
+.question.wrong{border-color:var(--wrong);background:#fef2f2;}
+
+.question p{                   /* <-- more space below stem */
+  margin-bottom:.9rem;
+}
+
+label{
+  display:flex;
+  align-items:flex-start;
+  gap:.6rem;                   /* slightly bigger gap */
+  margin-bottom:.7rem;         /* extra space between options */
+  cursor:pointer;
+}
+label input{margin-top:.3rem;}
+label .icon{margin-left:auto;font-size:1.1rem;line-height:1;}
+
+/* ---------- sticky footer ---------- */
+.footer{
+  position:fixed;
+  bottom:0;left:0;right:0;
+  background:#fff;
+  border-top:1px solid #e5e7eb;
+  box-shadow:0 -1px 3px rgba(0,0,0,.04);
+  padding:.6rem 1rem;
+  display:flex;
+  justify-content:center;
+}
+#finishBtn{
+  padding:.5rem 1rem;
+  background:var(--brand);
+  color:#fff;
+  border:none;
+  border-radius:var(--radius);
+  cursor:pointer;
+}
+#finishBtn:disabled{opacity:.5;cursor:not-allowed;}
+
+@media(max-width:600px){
+  body{padding:.75rem;}
+  .controls{gap:.3rem;}
+  button,select{font-size:.8rem;}
+}
+</style>
 </head>
 <body>
-  <h1>CPOA Mock Exam</h1>
-  <p>This assessment randomly selects <strong>60 questions</strong> (out of 150) every run, strictly adhering to the distribution requested:</p>
-  <ul>
-    <li>KA1 – Apply Foundational Concepts: 10% (6 questions)</li>
-    <li>KA2 – Cultivate Customer Intimacy: 15% (9 questions)</li>
-    <li>KA3 – Engage the Whole Team: 15% (9 questions)</li>
-    <li>KA4 – Make an Impact: 15% (9 questions)</li>
-    <li>KA5 – Deliver Often: 15% (9 questions)</li>
-    <li>KA6 – Learn Fast: 15% (9 questions)</li>
-    <li>KA7 – Obsess About Value: 15% (9 questions)</li>
-  </ul>
-  <details>
-    <summary>How scoring works</summary>
-    <p>• <strong>Single‑select</strong>: choose one answer.<br>• <strong>Multi‑select</strong>: choose <em>all</em> correct answers (any extra or missing answer marks the whole question wrong).<br>• Hit <em>Finish exam</em> to see results — correct answers show in green, incorrect in red.</p>
-  </details>
+  <div class="wrapper">
+    <h1>CPOA Mock Exam</h1>
 
-  <div id="exam"></div>
-  <button id="finishBtn">Finish exam</button>
-  <div id="result"></div>
+    <!-- selector & refresh -->
+    <div class="controls">
+      <label for="qCountSel">Number&nbsp;of&nbsp;questions:</label>
+      <select id="qCountSel">
+        <option value="5">5</option>
+        <option value="10">10</option>
+        <option value="30">30</option>
+        <option value="60" selected>60</option>
+      </select>
+      <button id="refreshBtn">Refresh</button>
+    </div>
+
+    <!-- results box -->
+    <div id="results"></div>
+
+    <!-- questions mount -->
+    <div id="questions"></div>
+  </div>
+
+  <!-- sticky footer -->
+  <div class="footer">
+    <button id="finishBtn">Finish exam</button>
+  </div>
+
+  <!-- external question bank -->
+  <script src="questions.js"></script>
 
 <script>
-/***** Utility *****/
-const TOTAL_QUESTIONS = 60;
-const PERCENTAGES = {
-  "Apply Foundational Concepts": 0.10,
-  "Cultivate Customer Intimacy": 0.15,
-  "Engage the Whole Team": 0.15,
-  "Make an Impact": 0.15,
-  "Deliver Often": 0.15,
-  "Learn Fast": 0.15,
-  "Obsess About Value": 0.15
-};
-
-function shuffle(arr){ for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; } }
-
-/***** Compute domain quotas (always sums to 60) *****/
-function computeQuotas(){
-  const q={};
-  for(const [domain,pct] of Object.entries(PERCENTAGES)){ q[domain] = Math.round(TOTAL_QUESTIONS*pct); }
-  let diff = TOTAL_QUESTIONS - Object.values(q).reduce((a,b)=>a+b,0);
-  const domains = Object.keys(q);
-  let i=0;
-  while(diff!==0){ q[domains[i%domains.length]] += diff>0?1:-1; diff += diff>0?-1:1; i++; }
-  return q;
-}
-const QUOTAS = computeQuotas();
-
-/***** Build and Render Exam (executes after question bank script loads) *****/
-function buildExamSet(){
-  const buckets={}; Object.keys(PERCENTAGES).forEach(d=>buckets[d]=[]);
-  QUESTION_BANK.forEach(q=>{ if(buckets[q.domain]) buckets[q.domain].push(q); });
-  Object.values(buckets).forEach(shuffle);
-  const selected=[];
-  for(const [domain,count] of Object.entries(QUOTAS)){
-    if(buckets[domain].length < count){ console.warn(`Not enough questions for ${domain}`); }
-    selected.push(...buckets[domain].slice(0,count));
-  }
-  shuffle(selected);
-  return selected;
+/* ---------- guard ---------- */
+if(typeof QUESTION_BANK==='undefined'){
+  alert(`ERROR: questions.js not loaded.\nInclude <script src="questions.js"><\/script> before this file.`);
+  throw new Error('QUESTION_BANK missing');
 }
 
-function renderExam(){
-  const examDiv = document.getElementById('exam'); examDiv.innerHTML='';
-  const examSet = buildExamSet();
-  examSet.forEach((q,i)=>renderQuestion(examDiv,q,i));
-}
+/* ---------- helpers ---------- */
+const shuffle = arr => arr.map(v=>[Math.random(),v]).sort((a,b)=>a[0]-b[0]).map(v=>v[1]);
 
-function renderQuestion(parent,q,idx){
-  const container=document.createElement('div'); container.className='question';
-  const title=document.createElement('p');
-  title.innerHTML=`<strong>${idx+1}. </strong>${q.text}`;
-  container.appendChild(title);
-  const order=[...q.options.keys()]; shuffle(order);
-  order.forEach(optIdx=>{
-    const label=document.createElement('label');
-    const input=document.createElement('input');
-    input.type=q.multi?'checkbox':'radio';
-    input.name=`q${idx}`;
-    input.dataset.correct=q.correct.includes(optIdx);
-    label.appendChild(input);
-    label.appendChild(document.createTextNode(' '+q.options[optIdx]));
-    container.appendChild(label);
-  });
-  parent.appendChild(container);
-}
+/* ---------- DOM refs ---------- */
+const qWrap     = document.getElementById('questions');
+const resultsEl = document.getElementById('results');
+const finishBtn = document.getElementById('finishBtn');
+const qCountSel = document.getElementById('qCountSel');
+const refreshBtn= document.getElementById('refreshBtn');
 
-/***** Scoring *****/
-let finished=false;
-function gradeExam(){
-  if(finished) return; finished=true;
-  const questions=[...document.querySelectorAll('.question')];
-  let score=0;
-  questions.forEach(qEl=>{
-    const inputs=[...qEl.querySelectorAll('input')];
-    let ok=true;
-    inputs.forEach(inp=>{ const shouldBe = inp.dataset.correct === 'true'; if(shouldBe !== inp.checked){ ok=false; } });
-    qEl.classList.add(ok ? 'correct' : 'incorrect');
-    if(ok) score++;
-  });
-  const pct=Math.round((score/questions.length)*100);
-  document.getElementById('result').innerHTML = `<h2>Your score: ${score}/${questions.length} (${pct}%)</h2>`;
+/* ---------- state ---------- */
+let currentQuestions=[];
+let graded=false;
+
+/* ---------- build exam ---------- */
+function buildExam(n){
+  // reset
+  qWrap.innerHTML='';
+  resultsEl.style.display='none';
+  resultsEl.innerHTML='';
+  graded=false;
+  finishBtn.disabled=false;
+  currentQuestions=shuffle([...QUESTION_BANK]).slice(0,n);
+  currentQuestions.forEach((q,i)=>renderQuestion(q,i+1));
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
-/***** Init after DOM ready *****/
-window.addEventListener('DOMContentLoaded', () => {
-  if(typeof QUESTION_BANK === 'undefined'){
-    console.error('Question bank not loaded');
-    document.getElementById('exam').textContent = 'Failed to load questions.';
-    return;
-  }
-  renderExam();
-  document.getElementById('finishBtn').addEventListener('click', gradeExam);
-});
+function renderQuestion(q,num){
+  const card=document.createElement('div');
+  card.className='question';
+  card.dataset.id=q.id;
+  card.dataset.domain=q.domain||'Other';
+
+  const stem=document.createElement('p');
+  stem.innerHTML=`<strong>${num}. </strong>${q.text??q.stem}`;
+  card.appendChild(stem);
+
+  const isMulti=q.multi||Array.isArray(q.correct)&&q.correct.length>1;
+  q.options.forEach((opt,idx)=>{
+    const lbl=document.createElement('label');
+
+    const inp=document.createElement('input');
+    inp.type=isMulti?'checkbox':'radio';
+    inp.name=`q_${q.id}`;
+    inp.value=idx;
+    lbl.appendChild(inp);
+
+    const span=document.createElement('span');
+    span.textContent=opt;
+    lbl.appendChild(span);
+
+    const icon=document.createElement('span');
+    icon.className='icon';
+    lbl.appendChild(icon);
+
+    lbl.addEventListener('change',()=>{if(!graded)card.classList.add('answered');});
+    card.appendChild(lbl);
+  });
+
+  qWrap.appendChild(card);
+}
+
+/* ---------- grading ---------- */
+function grade(){
+  if(graded)return;
+  graded=true;
+  finishBtn.disabled=true;
+
+  const domainStats={}; // {domain:{total, correct}}
+  currentQuestions.forEach(q=>{
+    const card=qWrap.querySelector(`[data-id='${q.id}']`);
+    const inputs=[...card.querySelectorAll('input')];
+    const labels=[...card.querySelectorAll('label')];
+
+    const chosenIdx=inputs.reduce((a,inp,idx)=>{if(inp.checked)a.push(idx);return a;},[]);
+    let correctIdx=q.correct??q.correctAnswers??[];
+    if(!Array.isArray(correctIdx)) correctIdx=[correctIdx];
+
+    const isRight=chosenIdx.length===correctIdx.length&&chosenIdx.every(i=>correctIdx.includes(i));
+
+    card.classList.remove('answered');
+    card.classList.add(isRight?'correct':'wrong');
+
+    labels.forEach((lbl,idx)=>{
+      const icon=lbl.querySelector('.icon');
+      if(inputs[idx].checked){
+        if(correctIdx.includes(idx)){
+          icon.textContent='✅';
+          icon.style.color='var(--correct)';
+        }else{
+          icon.textContent='❌';
+          icon.style.color='var(--wrong)';
+        }
+      }
+      inputs[idx].disabled=true; // read-only after grading
+    });
+
+    // stats
+    const d=q.domain||'Other';
+    if(!domainStats[d]) domainStats[d]={total:0,correct:0};
+    domainStats[d].total++;
+    if(isRight) domainStats[d].correct++;
+  });
+
+  // results box
+  const totalRight=Object.values(domainStats).reduce((s,v)=>s+v.correct,0);
+  const total=currentQuestions.length;
+
+  let html=`<h2>Result: ${totalRight}/${total} (${Math.round(totalRight/total*100)}%)</h2><ul>`;
+  Object.entries(domainStats).sort((a,b)=>a[0].localeCompare(b[0]))
+        .forEach(([d,stat])=>{
+          const pct=Math.round(stat.correct/stat.total*100);
+          html+=`<li>${d}: ${pct}% (${stat.correct}/${stat.total})</li>`;
+        });
+  html+='</ul>';
+  resultsEl.innerHTML=html;
+  resultsEl.style.display='block';
+}
+
+/* ---------- events ---------- */
+finishBtn.addEventListener('click',grade);
+refreshBtn.addEventListener('click',()=>buildExam(+qCountSel.value));
+
+/* ---------- init ---------- */
+document.addEventListener('DOMContentLoaded',()=>buildExam(+qCountSel.value));
 </script>
 </body>
 </html>
